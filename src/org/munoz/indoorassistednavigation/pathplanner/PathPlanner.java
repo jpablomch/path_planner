@@ -1,17 +1,13 @@
 package org.munoz.indoorassistednavigation.pathplanner;
 
 import java.util.ArrayList;
-
-/*
- * Path planner assumes that map exists. 
- */
 import org.munoz.mathlib.Vector3;
 
 
 public class PathPlanner {
-	int[][] map;
+	int[][] map; 
 	int granularity;
-	ArrayList<Node> nodes;
+	private ArrayList<Node> nodes;
 	Node start = null;
 	Node end = null;
 	int clearAreaThreshold = 40;
@@ -33,6 +29,44 @@ public class PathPlanner {
 		granularity = 8; // TODO: remove magic numbers 
 		createNodes();
 	}
+	public PathPlanner(int [][]m, int gran){
+		map = m;
+		granularity = gran;
+		createNodes();
+	}
+
+	public void createNodes(){
+		hasStartNode = false;
+		hasEndNode = false;
+		nodes = new ArrayList<Node>();
+		for(int i = 0; i<map[0].length; i=i+granularity){  // .getHeight()
+			for(int j=0; j<map.length; j=j+granularity){
+				if(isEmptySpace(j, i)){
+					Node n = new Node(j, i);
+					n.gScore = Double.MAX_VALUE; // TODO: This should be 0 at the beginning. 
+					nodes.add(n);
+				}
+		    }
+		}    
+//		println(nodes.size());
+		// Neighbors
+		for(Node n1 : nodes){
+			for(Node n2 : nodes){
+				// TODO: Granularity * 2??? 
+				if(n1 != n2 && Math.abs(n1.x - n2.x) <= granularity && Math.abs(n1.y - n2.y) <= granularity){
+					// Check for walls   
+					if(isPath(n1, n2)){
+						n1.getNeighbors().add(n2);
+					}
+				}
+		    }
+		}
+	}
+	public ArrayList<Node> getNodes() {
+		return nodes;
+	}
+	
+
 	public boolean setStartNode(int x, int y){
 		start = findClosestNode(x, y);
 		hasStartNode = true;
@@ -125,31 +159,24 @@ public class PathPlanner {
 	}
 
 	private void showPath(){
-//		println("Showing path");
 		boolean drawingPath = true;
 		Node current = end;
 		if(end == null){
-//			println("error 1");
 		    return;
 		}
 		while(drawingPath){
 			if(current.cameFrom == null){
-//				println("error 2");
 				return;
 		    }
-//		    stroke(#ff00ff);
-//		    line(current.x, current.y, current.cameFrom.x, current.cameFrom.y);
 		    // TODO: Draw Line
 			current = current.cameFrom;
 		    if(current.cameFrom == null){
 		    	drawingPath = false;
 		    }
-//		    stroke(0);
 		}
 	}  
 	
 	public void storePath(){
-//		boolean storingPath = true;
 		storedPath = new ArrayList<Node>();
 		if(end == null)
 			return;
@@ -189,7 +216,7 @@ public class PathPlanner {
 		      
 		    // find best neighbor; 
 //		      current = lowestFScore(current.neighbors); ???
-		    for(Node n : current.neighbors){
+		    for(Node n : current.getNeighbors()){
 		    	if(closedSet.contains(n)){
 		    		continue;
 		    	}
@@ -227,34 +254,6 @@ public class PathPlanner {
 //		  image(map, 0, 0);
 //		}
 	
-	public void createNodes(){
-		hasStartNode = false;
-		hasEndNode = false;
-		nodes = new ArrayList<Node>();
-		for(int i = 0; i<map[0].length; i=i+granularity){  // .getHeight()
-			for(int j=0; j<map.length; j=j+granularity){
-				if(isEmptySpace(j, i)){
-					Node n = new Node(j, i);
-					n.gScore = Double.MAX_VALUE;
-					nodes.add(n);
-				}
-		    }
-		}    
-//		println(nodes.size());
-		// Neighbors
-		for(Node n1 : nodes){
-			for(Node n2 : nodes){
-				// TODO: Granularity * 2??? 
-				if(n1 != n2 && Math.abs(n1.x - n2.x) <= granularity && Math.abs(n1.y - n2.y) <= granularity){
-					// Check for walls   
-					if(isPath(n1, n2)){
-						n1.neighbors.add(n2);
-					}
-				}
-		    }
-		}
-	}
-	
 	private boolean isPath(Node a, Node b){
 		int checkX = a.x;
 		int checkY = a.y;
@@ -271,15 +270,13 @@ public class PathPlanner {
 		    else{
 		    	checkY--;
 		    }
-		    
 		    // Check that we aren't out of bounds
-		    if(checkY < 0 || checkY > map[0].length /*map.getHeight()*/ || checkX < 0 || checkX > map[0].length /*map.getWidth()*/){
+		    if(checkY < 0 || checkY > map[0].length /*map.getHeight()*/ || checkX < 0 || checkX > map.length /*map.getWidth()*/){
 		    	return false;
 		    }
 		    
 //		    color c = get(checkX, checkY);
 		    int c = map[checkX][checkY]; // .getPixel(checkX, checkY);
-//		    if(red(c) < 30 || blue(c) < 30 || green(c) < 30){
 		    if(((c)&0xFF) < 30 || ((c>>8)&0xFF) < 30 || ((c>>16)&0xFF) < 30){
 		    	return false;
 		    }
@@ -339,22 +336,6 @@ public class PathPlanner {
 		else{
 			return -angle;
 		}
-				
-		
-//		return Math.atan2(Vector3.crossProduct(v1, v2).length(), Vector3.dotProduct(v1,  v2));
-		
 	}
 	
 }
-//interface Image {
-//	static enum ImageFormat{
-//		ARGB8888, ARGB4444, RGB565
-//	}
-//	public int getWidth();
-//    public int getHeight();
-//    public ImageFormat getFormat();
-//    public void dispose();   
-//    // Added by JP on Jun 14th 2014
-//    public int getPixel(int x, int y);
-//    
-//}
