@@ -10,7 +10,7 @@ public class PathPlanner {
 	private ArrayList<Node> nodes;
 	Node start = null;
 	Node end = null;
-	int clearAreaThreshold = 40;
+	int clearAreaThreshold = 40; // TODO: Remove magic numbers
 	public ArrayList<Node> storedPath;
 	public int posX;
 	public int posY;
@@ -38,6 +38,9 @@ public class PathPlanner {
 	public void createNodes(){
 		hasStartNode = false;
 		hasEndNode = false;
+		if(nodes != null){
+			nodes.removeAll(nodes);
+		}
 		nodes = new ArrayList<Node>();
 		for(int i = 0; i<map[0].length; i=i+granularity){  // .getHeight()
 			for(int j=0; j<map.length; j=j+granularity){
@@ -190,15 +193,8 @@ public class PathPlanner {
 			storedPath.add(current);
 		}
 	}
-
-	// TODO: Remove?
-//	private void redrawOriginalNodes(){ // and remove from 
-//		for(Node n : nodes){
-//			ellipse(n.x, n.y, 2, 2);
-//		}
-//	}
 	
-	public void findPath(){
+	public boolean findPath(){
 		ArrayList<Node> closedSet = new ArrayList<Node>();
 		ArrayList<Node> openSet = new ArrayList<Node>();
 		double g = 0;
@@ -208,12 +204,11 @@ public class PathPlanner {
 		while(!openSet.isEmpty()){
 			Node current = lowestFScore(openSet);
 		    if(current == end){
-//		    	println("current == end");
-		        return; //  
+				System.out.println("Found path"); 
+		    	return true; //  
 		    }
 		    closedSet.add(current);
 		    openSet.remove(current);
-		      
 		    // find best neighbor; 
 //		      current = lowestFScore(current.neighbors); ???
 		    for(Node n : current.getNeighbors()){
@@ -231,6 +226,8 @@ public class PathPlanner {
 		    	}     
 		    }  
 		}
+		System.out.println("Couldn't find path"); // TODO: Handle this. s
+		return false;
 	}
 	
 	private Node lowestFScore(ArrayList<Node> nodeList){
