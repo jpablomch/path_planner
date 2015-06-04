@@ -26,7 +26,7 @@ public class Direction {
 	    }
 
 	    return vector;
-	  }	
+	}	
 }
 
 class LinearAlgebraUtils {
@@ -52,7 +52,7 @@ class LinearAlgebraUtils {
 	  
 
 	  
-	}
+}
 
 
 /**

@@ -17,6 +17,7 @@ public class PathPlanner {
 	public boolean hasStartNode = false;
 	public boolean hasEndNode = false;
 	public Node lastEndNode = null;
+	public int currentFloor; 
 	
 	public enum PlannerState{
 		READY_TO_LISTEN, MAP_DISPLACEMENT, SETTING_START, SETTING_END, NO_TASK_SELECTED, READ_LIST_OF_TARGETS, GOING_TO_DESTINATION, ARRIVED
