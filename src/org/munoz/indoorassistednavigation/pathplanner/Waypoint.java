@@ -2,15 +2,15 @@ package org.munoz.indoorassistednavigation.pathplanner;
 
 import java.util.ArrayList;
 
-public class Node {
+public class Waypoint {
 	int x;
 	int y;
-	private ArrayList<Node> neighbors = new ArrayList<Node>();
+	private ArrayList<Waypoint> neighbors = new ArrayList<Waypoint>();
 	double fScore; 
 	double gScore;
-	Node cameFrom;
+	Waypoint cameFrom;
 	String label; 
-	public Node(int j, int i){
+	public Waypoint(int j, int i){
 		x = j;
 		y = i;
 		label = null;
@@ -23,7 +23,7 @@ public class Node {
 		return y;
 	}
 	
-	public ArrayList<Node> getNeighbors(){
+	public ArrayList<Waypoint> getNeighbors(){
 		return neighbors;
 	}
 	
@@ -35,4 +35,11 @@ public class Node {
 		label = l;
 	}
 	
+	// TODO: Comment this out for release
+//	public double getF(){
+//		return fScore;
+//	}
+//	public double getG(){
+//		return gScore;
+//	}
 }
