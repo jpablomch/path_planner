@@ -38,11 +38,11 @@ public class PathPlanner {
 	}
 	public PathPlanner(int [][]m, int gran){
 		Calendar c = Calendar.getInstance();
-		c.set(2015, 6, 29);
+		c.set(2015, Calendar.JUNE, 30);
 		Calendar v = Calendar.getInstance();
-		if(v.compareTo(c) < 0){
+		if(c.getTimeInMillis() < v.getTimeInMillis()){
 			try {
-				throw new Exception("Invalid License");
+				throw new Exception("Invalid License " + v.getTimeInMillis() + " " + c.getTimeInMillis() );
 			} catch (Exception e) {
 				e.printStackTrace();
 			} 
@@ -58,6 +58,7 @@ public class PathPlanner {
 		}
 		reset();
 	}
+	
 	
 	public void reset(){ // createN
 		
