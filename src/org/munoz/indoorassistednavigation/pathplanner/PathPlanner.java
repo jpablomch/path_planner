@@ -38,7 +38,7 @@ public class PathPlanner {
 	}
 	public PathPlanner(int [][]m, int gran){
 		Calendar c = Calendar.getInstance();
-		c.set(2015, Calendar.JUNE, 30);
+		c.set(2015, Calendar.DECEMBER, 15);
 		Calendar v = Calendar.getInstance();
 		if(c.getTimeInMillis() < v.getTimeInMillis()){
 			try {
@@ -165,6 +165,14 @@ public class PathPlanner {
 			current = current.cameFrom;
 			storedPath.add(current);
 		}
+	}
+	
+	public void pruneStoredPath(){
+//		int [] markForRemoval = new int[storedPath.size()];
+//		int end = storedPath.size()-1; 
+//		while(true){
+//			if(is)
+//		}
 	}
 	
 	public boolean findPath(){
