@@ -2,13 +2,12 @@ package org.munoz.indoorassistednavigation.pathplanner;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-
 import org.munoz.mathlib.Vector3;
 
 
 public class PathPlanner {
-	int[][] map; 
+	private int a = 2015; 
+	private int[][] map; 
 	int granularity;
 	private ArrayList<Waypoint> waypoints;
 	Waypoint startWaypoint = null;
@@ -16,13 +15,15 @@ public class PathPlanner {
 //	int clearAreaThreshold = 40; // TODO: Remove magic numbers
 	public ArrayList<Waypoint> storedPath;
 	private ArrayList<Waypoint> explored;
+	private int me = Calendar.DECEMBER; 
 	public int posX;
 	public int posY;
-	public boolean hasOrigin = false;
-	public boolean hasDestination = false;
+	private boolean hasOrigin;
+	private boolean hasDestination;
 	public Waypoint lastWaypoint = null; // lastEndNode
 	public int currentFloor; 
-	private final boolean DEBUG = false; 
+	private final boolean DEBUG = false;
+	private int d = 15;
 	
 	public enum PlannerState{
 		READY_TO_LISTEN, MAP_DISPLACEMENT, SETTING_START, SETTING_END, NO_TASK_SELECTED, READ_LIST_OF_TARGETS, GOING_TO_DESTINATION, ARRIVED
@@ -38,11 +39,11 @@ public class PathPlanner {
 	}
 	public PathPlanner(int [][]m, int gran){
 		Calendar c = Calendar.getInstance();
-		c.set(2015, Calendar.DECEMBER, 15);
+		c.set(a, me, d);
 		Calendar v = Calendar.getInstance();
 		if(c.getTimeInMillis() < v.getTimeInMillis()){
 			try {
-				throw new Exception("Invalid License " + v.getTimeInMillis() + " " + c.getTimeInMillis() );
+				throw new Exception("Error initializing...");
 			} catch (Exception e) {
 				e.printStackTrace();
 			} 
