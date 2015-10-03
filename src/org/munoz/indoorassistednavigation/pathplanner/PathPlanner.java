@@ -2,28 +2,31 @@ package org.munoz.indoorassistednavigation.pathplanner;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
 import org.munoz.mathlib.Vector3;
 
 
 public class PathPlanner {
-	private int a = 2015; 
+	private int a = 2016; 
 	private int[][] map; 
 	int granularity;
 	private ArrayList<Waypoint> waypoints;
 	Waypoint startWaypoint = null;
 	Waypoint endWaypoint = null;
-//	int clearAreaThreshold = 40; // TODO: Remove magic numbers
 	public ArrayList<Waypoint> storedPath;
 	private ArrayList<Waypoint> explored;
-	private int me = Calendar.DECEMBER; 
+	private int me = Calendar.JANUARY; 
 	public int posX;
 	public int posY;
+	public int posXAdj; 
+	public int posYAdj; 
 	private boolean hasOrigin;
 	private boolean hasDestination;
-	public Waypoint lastWaypoint = null; // lastEndNode
+	public Waypoint lastWaypoint = null; 
 	public int currentFloor; 
 	private final boolean DEBUG = false;
 	private int d = 15;
+	
 	
 	public enum PlannerState{
 		READY_TO_LISTEN, MAP_DISPLACEMENT, SETTING_START, SETTING_END, NO_TASK_SELECTED, READ_LIST_OF_TARGETS, GOING_TO_DESTINATION, ARRIVED
@@ -161,6 +164,9 @@ public class PathPlanner {
 		storedPath.add(endWaypoint);
 		while(true){
 			if(current.cameFrom == null){
+				System.out.println("Original path size " + storedPath.size());
+				pruneStoredPath();
+				System.out.println("Pruned path size " + storedPath.size());
 				return;
 			}
 			current = current.cameFrom;
@@ -168,18 +174,66 @@ public class PathPlanner {
 		}
 	}
 	
-	public void pruneStoredPath(){
-//		int [] markForRemoval = new int[storedPath.size()];
-//		int end = storedPath.size()-1; 
-//		while(true){
-//			if(is)
-//		}
+	private void pruneStoredPath(){
+		int checkA = storedPath.size()-1; 
+		int checkB = 0;
+		int k = 2;
+		while(checkA-checkB > 1 || checkA > 1){
+			boolean canSee = canSee(storedPath.get(checkA), storedPath.get(checkB));
+			if(canSee){
+				System.out.println("I can see " + checkB + " from " + checkA);
+				int j = storedPath.size()-1;
+				for(int i = 0; i<(checkA-checkB-1); i++){
+					System.out.println("Deleting: " + (storedPath.size()-k));
+					storedPath.remove(storedPath.size()-k);
+					System.out.println("Size of path: " + storedPath.size());
+				}
+				canSee = false;
+				checkB = 0;
+				k++;
+				checkA = storedPath.size()-k+1;
+				System.out.println("checkA: " + checkA + " checkB: " + checkB);
+			}
+			else{
+				checkB++; 
+			}
+			System.out.println("Continue: " + (checkA-checkB > 1 || checkA > 1));
+			System.out.println("checkA: " + checkA + " checkB: " + checkB);
+		}
+	}
+	private boolean canSee(Waypoint a, Waypoint b){
+//		System.out.println("In cansee()...");
+		Vector3 vs = new Vector3(b.x-a.x, b.y-a.y, 0);
+		double d = euclideanDistance(vs.getX(), vs.getY(), 0, 0);
+		Vector3 v = vs.divScalar((float) d);
+//		System.out.println("In cansee()... Entering for loop");
+		for(int i = 1; i<Math.ceil(d)+1; i++){
+//			System.out.println("In cansee()... i= " + i);
+//			System.out.println("Vx " + v.getX() + " Vy " + v.getY());
+//			System.out.println("Ax " + a.x + " By " + a.y);
+//			System.out.println("Vix " + v.multScalar(i).getX() + " Viy " + v.multScalar(i).getY());
+			Vector3 c = Vector3.addVectors(new Vector3(a.x, a.y, 0), v.multScalar(i));  // v + 
+//			System.out.println("Vx " + v.getX() + " Vy " + v.getY());
+//			System.out.println("cx " + c.getX() + " cy " + c.getY());
+//			if(b.x == (int)c.getX() && b.y == (int)c.getY()){
+			if(Math.abs(b.x-c.getX()) < 4 && Math.abs(b.y -c.getY()) < 4){ // What is the correct number here?
+//				System.out.println("In cansee()...returning true");
+				return true;
+			}
+			int col = map[(int) c.getX()][(int) c.getY()]; // .getPixel(checkX, checkY);
+		    if(((col)&0xFF) < 30 || ((col>>8)&0xFF) < 30 || ((col>>16)&0xFF) < 30){
+//		    if(((col)&0xFF) < 20 || ((col>>8)&0xFF) < 20 || ((col>>16)&0xFF) < 20){ // TODO: CREATE A SEPARATE FUNCTION FOR THIS. USED MORE THAN ONCE IN THIS CODE.
+//				System.out.println("In cansee()...returning false");
+		    	return false;
+		    }
+		}
+		return false;
 	}
 	
 	public boolean findPath(){
 		ArrayList<Waypoint> closedSet = new ArrayList<Waypoint>();
 		ArrayList<Waypoint> openSet = new ArrayList<Waypoint>();
-		startWaypoint.fScore = euclideanDistance(startWaypoint.x, endWaypoint.x, startWaypoint.y, endWaypoint.y);
+		startWaypoint.fScore = euclideanDistance(startWaypoint.x, startWaypoint.y,endWaypoint.x, endWaypoint.y);
 		startWaypoint.gScore = 0; 
 		openSet.add(startWaypoint);
 		// TODO: REALLY inefficient. FIX;
@@ -362,6 +416,22 @@ public class PathPlanner {
 			// TODO: Handle this error
 		}
 	}
+	
+	public void setPose(int x, int y){
+		posX = x;
+		posY = y;
+		int col = map[posX][posY]; // .getPixel(checkX, checkY);
+	    if(((col)&0xFF) < 30 || ((col>>8)&0xFF) < 30 || ((col>>16)&0xFF) < 30){
+	    	Waypoint w = findClosestWaypoint(posX, posY);
+	    	posXAdj = w.getX();
+	    	posYAdj = w.getY();
+	    }
+	    else{
+	    	posXAdj = posX;
+	    	posYAdj = posY; 
+	    }
+	}
+	
 	public static double getAngleNextWaypoint(Waypoint origin, double thetaRadians, Waypoint nextWaypoint) {
 		Vector3 v1 = new Vector3(thetaRadians, 2);
 		Vector3 v2 = new Vector3(nextWaypoint.getX()-origin.getX(), nextWaypoint.getY()-origin.getY(), 0);
