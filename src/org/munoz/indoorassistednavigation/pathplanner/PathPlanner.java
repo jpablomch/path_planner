@@ -20,8 +20,8 @@ public class PathPlanner {
 	public int posY;
 	public int posXAdj; 
 	public int posYAdj; 
-	private boolean hasOrigin;
-	private boolean hasDestination;
+	public boolean hasOrigin;
+	public boolean hasDestination;
 	public Waypoint lastWaypoint = null; 
 	public int currentFloor; 
 	private final boolean DEBUG = false;
@@ -73,6 +73,10 @@ public class PathPlanner {
 		
 		hasOrigin = false;
 		hasDestination = false;
+		startWaypoint = null;
+		endWaypoint = null;
+		lastWaypoint = null; 
+				
 		if(waypoints != null){
 			waypoints.removeAll(waypoints);
 		}
@@ -221,13 +225,15 @@ public class PathPlanner {
 				return true;
 			}
 			int col = map[(int) c.getX()][(int) c.getY()]; // .getPixel(checkX, checkY);
-		    if(((col)&0xFF) < 30 || ((col>>8)&0xFF) < 30 || ((col>>16)&0xFF) < 30){
-//		    if(((col)&0xFF) < 20 || ((col>>8)&0xFF) < 20 || ((col>>16)&0xFF) < 20){ // TODO: CREATE A SEPARATE FUNCTION FOR THIS. USED MORE THAN ONCE IN THIS CODE.
-//				System.out.println("In cansee()...returning false");
+		    if(isOccupied(col)){
 		    	return false;
 		    }
 		}
 		return false;
+	}
+	
+	private boolean isOccupied(int col){
+		return (((col)&0xFF) < 100 || ((col>>8)&0xFF) < 100 || ((col>>16)&0xFF) < 100);
 	}
 	
 	public boolean findPath(){
@@ -321,7 +327,7 @@ public class PathPlanner {
 //		    color c = get(checkX, checkY);
 		    int c = map[checkX][checkY]; // .getPixel(checkX, checkY);
 //		    if(((c)&0xFF) < 30 || ((c>>8)&0xFF) < 30 || ((c>>16)&0xFF) < 30){
-		    if(((c)&0xFF) < 20 || ((c>>8)&0xFF) < 20 || ((c>>16)&0xFF) < 20){
+		    if(isOccupied(c)){
 		    	return false;
 		    }
 		}
@@ -421,7 +427,7 @@ public class PathPlanner {
 		posX = x;
 		posY = y;
 		int col = map[posX][posY]; // .getPixel(checkX, checkY);
-	    if(((col)&0xFF) < 30 || ((col>>8)&0xFF) < 30 || ((col>>16)&0xFF) < 30){
+	    if(isOccupied(col)){
 	    	Waypoint w = findClosestWaypoint(posX, posY);
 	    	posXAdj = w.getX();
 	    	posYAdj = w.getY();
