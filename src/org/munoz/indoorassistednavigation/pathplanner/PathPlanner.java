@@ -130,7 +130,7 @@ public class PathPlanner {
 				if(closedSet.contains(n)){
 					continue;
 				}
-				double tentativeG = current.gScore + euclideanDistance(current.x, current.y, n.x, n.y); // 2*Math.sqrt(2*(Math.pow(granularity, 2)));// granularity*2; // 1; //; // ;
+				double tentativeG = current.gScore + euclideanDistance(current.x, current.y, n.x, n.y); 
 				if(!openSet.contains(n) || tentativeG < n.gScore){
 					n.cameFrom = current;
 					n.gScore =  tentativeG;

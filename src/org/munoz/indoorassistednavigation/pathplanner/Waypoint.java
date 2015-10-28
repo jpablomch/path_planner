@@ -35,11 +35,11 @@ public class Waypoint {
 		label = l;
 	}
 	
-	// TODO: Comment this out for release
-//	public double getF(){
-//		return fScore;
-//	}
-//	public double getG(){
-//		return gScore;
-//	}
+	// TODO: Use DEBUG flags for these methods.
+	//	public double getF(){
+	//		return fScore;
+	//	}
+	//	public double getG(){
+	//		return gScore;
+	//	}
 }
