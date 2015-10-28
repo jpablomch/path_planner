@@ -5,10 +5,9 @@ import java.util.Calendar;
 
 import org.munoz.mathlib.Vector3;
 
-
 public class PathPlanner {
 	private int a = 2016; 
-	private int[][] map; 
+	private byte[][] map; 
 	int granularity;
 	private ArrayList<Waypoint> waypoints;
 	Waypoint startWaypoint = null;
@@ -27,20 +26,16 @@ public class PathPlanner {
 	private final boolean DEBUG = false;
 	private int d = 15;
 	
-	
 	public enum PlannerState{
 		READY_TO_LISTEN, MAP_DISPLACEMENT, SETTING_START, SETTING_END, NO_TASK_SELECTED, READ_LIST_OF_TARGETS, GOING_TO_DESTINATION, ARRIVED
 	}
 	
 	public PlannerState pState = null;
 	
-	public PathPlanner(int[][] m){ //Image m){
-//		map = m;
-//		granularity = 10; // TODO: remove magic numbers //  
-//		reset();
+	public PathPlanner(byte[][] m){ 
 		this(m, 10); 
 	}
-	public PathPlanner(int [][]m, int gran){
+	public PathPlanner(byte [][]m, int gran){
 		Calendar c = Calendar.getInstance();
 		c.set(a, me, d);
 		Calendar v = Calendar.getInstance();
@@ -60,12 +55,10 @@ public class PathPlanner {
 		else if(granularity > 30){
 			granularity = 20; 
 		}
-		reset();
+		init();
 	}
 	
-	
-	public void reset(){ // createN
-		
+	private void init(){ 
 		if(DEBUG){
 			System.out.println("In DEBUG mode");
 			explored = new ArrayList<Waypoint>(); 
@@ -81,26 +74,25 @@ public class PathPlanner {
 			waypoints.removeAll(waypoints);
 		}
 		waypoints = new ArrayList<Waypoint>();
-		for(int i = 0; i<map[0].length; i=i+granularity){  // .getHeight()
+		for(int i = 0; i<map[0].length; i=i+granularity){ 
 			for(int j=0; j<map.length; j=j+granularity){
 				if(isEmptySpace(j, i)){
 					Waypoint n = new Waypoint(j, i);
-//					n.gScore = Double.MAX_VALUE; // TODO: This should be 0 at the beginning. 
 					waypoints.add(n);
 				}
 		    }
 		}    
 		if(DEBUG){
 			System.out.println("Waypoints created");
+			
 		}
 		// Neighbors
 		for(Waypoint n1 : waypoints){
 			for(Waypoint n2 : waypoints){
-				// TODO: Granularity * 2??? 
 				if(n1 != n2 && Math.abs(n1.x - n2.x) <= Math.sqrt(2*Math.pow(granularity,2)) && Math.abs(n1.y - n2.y) <= Math.sqrt(2*Math.pow(granularity,2))){
-					// Check for walls   
+					// Check for static objects   
 					if(isPath(n1, n2)){
-						n1.getNeighbors().add(n2);
+						n1.getN().add(n2);
 					}
 				}
 		    }
@@ -109,13 +101,48 @@ public class PathPlanner {
 			System.out.println("Path planner ready");
 		}
 	}
+	public void reset(){ 
+		
+		if(DEBUG){
+			System.out.println("In DEBUG mode");
+			explored = new ArrayList<Waypoint>(); 
+		}
+		
+		hasOrigin = false;
+		hasDestination = false;
+		startWaypoint = null;
+		endWaypoint = null;
+		lastWaypoint = null; 
+		for(Waypoint w : waypoints){
+			w.cameFrom = null;
+		}
+		if(DEBUG){
+			System.out.println("Path planner ready");
+		}
+	}
+	
+	public void removeNode(int x, int y){
+		Waypoint rm = findClosestWaypoint(x, y);
+		if(euclideanDistance(rm.getX(), rm.getY(), x, y) > granularity){
+			return;
+		}
+		for(int i=x-granularity/2; i<=x+granularity/2; i++){
+			for(int j=y-granularity/2; j<=y+granularity/2; j++){
+				map[i][j] = 0b00000000; 
+			}
+		}
+		waypoints.remove(rm);
+		for(Waypoint w : waypoints){
+			w.getN().remove(rm);
+		}
+	}
+	
 	public ArrayList<Waypoint> getWaypoints() {
 		return waypoints;
 	}
 	
 
 	public boolean setOrigin(int x, int y){ // setStartNode
-
 		startWaypoint = findClosestWaypoint(x, y);
 		hasOrigin = true;
 		if(DEBUG){
@@ -152,7 +179,6 @@ public class PathPlanner {
 			if(current.cameFrom == null){
 				return;
 		    }
-		    // TODO: Draw Line
 			current = current.cameFrom;
 		    if(current.cameFrom == null){
 		    	drawingPath = false;
@@ -168,9 +194,7 @@ public class PathPlanner {
 		storedPath.add(endWaypoint);
 		while(true){
 			if(current.cameFrom == null){
-				System.out.println("Original path size " + storedPath.size());
 				pruneStoredPath();
-				System.out.println("Pruned path size " + storedPath.size());
 				return;
 			}
 			current = current.cameFrom;
@@ -185,27 +209,27 @@ public class PathPlanner {
 		while(checkA-checkB > 1 || checkA > 1){
 			boolean canSee = canSee(storedPath.get(checkA), storedPath.get(checkB));
 			if(canSee){
-				System.out.println("I can see " + checkB + " from " + checkA);
+//				System.out.println("I can see " + checkB + " from " + checkA);
 				int j = storedPath.size()-1;
 				for(int i = 0; i<(checkA-checkB-1); i++){
-					System.out.println("Deleting: " + (storedPath.size()-k));
+//					System.out.println("Deleting: " + (storedPath.size()-k));
 					storedPath.remove(storedPath.size()-k);
-					System.out.println("Size of path: " + storedPath.size());
+//					System.out.println("Size of path: " + storedPath.size());
 				}
 				canSee = false;
 				checkB = 0;
 				k++;
 				checkA = storedPath.size()-k+1;
-				System.out.println("checkA: " + checkA + " checkB: " + checkB);
+//				System.out.println("checkA: " + checkA + " checkB: " + checkB);
 			}
 			else{
 				checkB++; 
 			}
-			System.out.println("Continue: " + (checkA-checkB > 1 || checkA > 1));
-			System.out.println("checkA: " + checkA + " checkB: " + checkB);
+//			System.out.println("Continue: " + (checkA-checkB > 1 || checkA > 1));
+//			System.out.println("checkA: " + checkA + " checkB: " + checkB);
 		}
 	}
-	private boolean canSee(Waypoint a, Waypoint b){
+	public boolean canSee(Waypoint a, Waypoint b){
 //		System.out.println("In cansee()...");
 		Vector3 vs = new Vector3(b.x-a.x, b.y-a.y, 0);
 		double d = euclideanDistance(vs.getX(), vs.getY(), 0, 0);
@@ -224,7 +248,7 @@ public class PathPlanner {
 //				System.out.println("In cansee()...returning true");
 				return true;
 			}
-			int col = map[(int) c.getX()][(int) c.getY()]; // .getPixel(checkX, checkY);
+			byte col = map[(int) c.getX()][(int) c.getY()]; // .getPixel(checkX, checkY);
 		    if(isOccupied(col)){
 		    	return false;
 		    }
@@ -232,8 +256,9 @@ public class PathPlanner {
 		return false;
 	}
 	
-	private boolean isOccupied(int col){
-		return (((col)&0xFF) < 100 || ((col>>8)&0xFF) < 100 || ((col>>16)&0xFF) < 100);
+	private boolean isOccupied(byte col){
+//		return (((col)&0xFF) < 100 || ((col>>8)&0xFF) < 100 || ((col>>16)&0xFF) < 100);
+		return ((col & 0xFF) < 30);
 	}
 	
 	public boolean findPath(){
@@ -253,7 +278,7 @@ public class PathPlanner {
 		    closedSet.add(current);
 		    // find best neighbor; 
 //		      current = lowestFScore(current.neighbors); ???
-		    for(Waypoint n : current.getNeighbors()){
+		    for(Waypoint n : current.getN()){
 		    	if(closedSet.contains(n)){
 		    		continue;
 		    	}
@@ -325,7 +350,7 @@ public class PathPlanner {
 		    }
 		    
 //		    color c = get(checkX, checkY);
-		    int c = map[checkX][checkY]; // .getPixel(checkX, checkY);
+		    byte c = map[checkX][checkY]; // .getPixel(checkX, checkY);
 //		    if(((c)&0xFF) < 30 || ((c>>8)&0xFF) < 30 || ((c>>16)&0xFF) < 30){
 		    if(isOccupied(c)){
 		    	return false;
@@ -337,44 +362,10 @@ public class PathPlanner {
 	public ArrayList<Waypoint> getExplored(){
 		return explored;
 	}
-	// Original isPath
-//	private boolean isPath(Waypoint a, Waypoint b){
-//		int checkX = a.x;
-//		int checkY = a.y;
-//		while(checkX != b.x || checkY != b.y){
-//			if(checkX < b.x){
-//				checkX++;
-//			}
-//			else{
-//				checkX--;
-//			}
-//			if(checkY < b.y){
-//				checkY++;
-//			}
-//			else{
-//				checkY--;
-//			}
-//			// Check that we aren't out of bounds
-//			if(checkY < 0 || checkY > map[0].length /*map.getHeight()*/ || checkX < 0 || checkX > map.length /*map.getWidth()*/){
-//				return false;
-//			}
-//			
-////		    color c = get(checkX, checkY);
-//			int c = map[checkX][checkY]; // .getPixel(checkX, checkY);
-//			if(((c)&0xFF) < 30 || ((c>>8)&0xFF) < 30 || ((c>>16)&0xFF) < 30){
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
 		
 	private boolean isEmptySpace(int j, int i){
-		int c = map[j][i]; // .getPixel(j, i); //get(j, i);
-		int r = (c)&0xFF;
-		int g = (c>>8)&0xFF;
-		int b = (c>>16)&0xFF;
-//		if(r > 230 && g > 230 && b > 230){
-		if(r > 150 && g > 150 && b > 150){
+		byte c = map[j][i]; // .getPixel(j, i); //get(j, i);
+		if((c & 0xFF) > 230){ 
 			return true;
 		}
 		return false;
@@ -382,7 +373,7 @@ public class PathPlanner {
 		  
 	public Waypoint findClosestWaypoint(int x, int y){
 		Waypoint closest = null;
-		double distance = Double.MAX_VALUE;//map.getWidth();//width;
+		double distance = Double.MAX_VALUE;
 		for(Waypoint n : waypoints){
 			double dist = euclideanDistance(x, y, n.x, n.y);
 		    if(dist < distance){
@@ -390,11 +381,7 @@ public class PathPlanner {
 		        closest = n;
 		    }
 		}
-		// TODO(jpablomch): Fix this? 
-//		if(distance < granularity){
-			return closest;
-//		}
-//		return null;
+		return closest;
 	}
 	public Waypoint findClosestWaypointInPath(int x, int y){
 		Waypoint closest = null;
@@ -406,11 +393,7 @@ public class PathPlanner {
 				closest = n;
 			}
 		}
-		// TODO(jpablomch): Fix this? 
-//		if(distance < granularity){
 		return closest;
-//		}
-//		return null;
 	}
 	
 	public void markWaypoint(String label){
@@ -426,7 +409,7 @@ public class PathPlanner {
 	public void setPose(int x, int y){
 		posX = x;
 		posY = y;
-		int col = map[posX][posY]; // .getPixel(checkX, checkY);
+		byte col = map[posX][posY]; // .getPixel(checkX, checkY);
 	    if(isOccupied(col)){
 	    	Waypoint w = findClosestWaypoint(posX, posY);
 	    	posXAdj = w.getX();

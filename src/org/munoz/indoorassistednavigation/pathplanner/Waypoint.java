@@ -23,7 +23,7 @@ public class Waypoint {
 		return y;
 	}
 	
-	public ArrayList<Waypoint> getNeighbors(){
+	public ArrayList<Waypoint> getN(){
 		return neighbors;
 	}
 	
