@@ -22,7 +22,7 @@ pathPlanner.setOrigin(x1, y1);
 pathPlanner.setDestination(x2, y2); 
 
 ### We request the creation of a path, and store the path.  
-<boolean flag> = pathPlanner.findPath(); 
+boolean *success_flag* = pathPlanner.findPath(); 
 pathPlanner.storePath(); 
 
 ### Now we have a list of waypoints in storedPath. We can access a waypoint on the path using its position value. However, we have to consider that waypoints have been stored in reversed order.
