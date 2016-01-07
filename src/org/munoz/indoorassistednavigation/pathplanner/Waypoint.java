@@ -8,7 +8,7 @@ public class Waypoint {
 	private ArrayList<Waypoint> neighbors = new ArrayList<Waypoint>();
 	double fScore; 
 	double gScore;
-	Waypoint cameFrom;
+	Waypoint from;
 	String label; 
 	public Waypoint(int j, int i){
 		x = j;
@@ -34,12 +34,4 @@ public class Waypoint {
 	public void setLabel(String l){
 		label = l;
 	}
-	
-	// TODO: Use DEBUG flags for these methods.
-	//	public double getF(){
-	//		return fScore;
-	//	}
-	//	public double getG(){
-	//		return gScore;
-	//	}
 }
