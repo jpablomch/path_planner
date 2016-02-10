@@ -2,6 +2,9 @@
 // 
 // DON'T MODIFY THIS CODE. THANKS. PABLO
 // BING, YOU ARE NOT AUTHORIZED TO SHARE THIS CODE.
+
+// TODO: Make changes if sharing with Bing
+
 package org.munoz.indoorassistednavigation.pathplanner;
 
 import java.util.ArrayList;
@@ -16,6 +19,9 @@ public class PathPlanner {
 	private byte[][] map;
 	private int granularity;
 	private ArrayList<Waypoint> waypoints;
+	private ArrayList<Waypoint> removedW;
+	private ArrayList<Waypoint> removedWN;
+	private ArrayList<Pixel> toReset;
 	private Waypoint startWaypoint = null;
 	private Waypoint endWaypoint = null;
 	public ArrayList<Waypoint> storedPath;
@@ -38,7 +44,7 @@ public class PathPlanner {
 	private final boolean DEBUG = false;
 	private final static int DEFAULT_GRANULARITY = 10;
 	private final static int MIN_GRANULARITY = 2; // 7; 
-	private final static int MAX_GRANULARITY = 30;
+	private final static int MAX_GRANULARITY = 30; 
 	private final static int MAX_HEAT = 30;
 	private final static int LAPLACIAN_INDEX = 4; 
 	private final static int REACHABILITY_INDEX = 230; 
@@ -60,7 +66,7 @@ public class PathPlanner {
 		init();
 	}
 	public boolean canSee(Waypoint a, Waypoint b){
-		if(a == null || b == null){
+		if(a == null || b == null){			
 			return false;
 		}
 		Vector3 vs = new Vector3(b.x-a.x, b.y-a.y, 0);
@@ -168,6 +174,9 @@ public class PathPlanner {
 			waypoints.removeAll(waypoints);
 		}
 		waypoints = new ArrayList<Waypoint>();
+		removedW = new ArrayList<Waypoint>(); 
+		removedWN = new ArrayList<Waypoint>();
+		toReset = new ArrayList<Pixel>(); 
 		for(int i = 0; i<map[0].length; i=i+granularity){
 			for(int j=0; j<map.length; j=j+granularity){
 				if(isEmptySpace(j, i)){
@@ -178,7 +187,7 @@ public class PathPlanner {
 		}
 		for(Waypoint n1 : waypoints){
 			for(Waypoint n2 : waypoints){
-				if(n1 != n2 && Math.abs(n1.x - n2.x) <= Math.sqrt(2)*granularity && Math.abs(n1.y - n2.y) <= Math.sqrt(2*Math.pow(granularity,2))){
+				if(n1 != n2 && Math.abs(n1.x - n2.x) <= Math.sqrt(2)*granularity && Math.abs(n1.y - n2.y) <= Math.sqrt(2)*granularity){
 					if(isPath(n1, n2)){
 						n1.getN().add(n2);
 					}
@@ -257,6 +266,13 @@ public class PathPlanner {
 		int checkB = 0;
 		int k = 2;
 		while(checkA-checkB > 1 || checkA > 1){
+			// TODO: Remove. I have to add this because of error in fullreset. 
+//			System.out.println(storedPath.size() + " " + checkA + " " + checkB);
+//			if(storedPath.size() == checkB){
+//				break;
+//			}
+			// END REMOVE!!
+			
 			boolean canSee = canSee(storedPath.get(checkA), storedPath.get(checkB));
 			if(canSee){
 				storedPath.size();
@@ -273,7 +289,81 @@ public class PathPlanner {
 			}
 		}
 	}
+//	static int countRemoved = 0; 
+//	static int countRemInN = 0; 
+	
+	// http://stackoverflow.com/questions/471962/how-do-determine-if-a-polygon-is-complex-convex-nonconvex
+//	given p[k], p[k+1], p[k+2] each with coordinates x, y:
+//		 dx1 = x[k+1]-x[k]
+//		 dy1 = y[k+1]-y[k]
+//		 dx2 = x[k+2]-x[k+1]
+//		 dy2 = y[k+2]-y[k+1]
+//		 zcrossproduct = dx1*dy2 - dy1*dx2
+	
+	
+	private void cornerMaker(){
+		// Check that path is greater than 2. 
+		ArrayList<Integer> toRemove = new ArrayList<Integer>(); 
+		ArrayList<Pixel> toAdd = new ArrayList<Pixel>();
+		for(int i=1; i<storedPath.size()-2; i++){
 
+			Waypoint k = storedPath.get(i-1);
+			Waypoint k1 = storedPath.get(i);
+			Waypoint k2 = storedPath.get(i+1);
+			Waypoint k3 = storedPath.get(i+2);
+			if(euclideanDistance(k1.getX(), k1.getY(), k2.getX(), k2.getY()) <= Math.sqrt(2)*granularity*2){
+				if(k.getX() <= k1.getX() && k.getY() >= k1.getY() && k2.getX() <= k3.getX() && k2.getY() <= k3.getY()){
+					toRemove.add(i);
+					toRemove.add(i+1);
+					toAdd.add(new Pixel(k1.getX(), k2.getY()));
+					System.out.println("Removed!");
+				}
+				
+//				int dx1 = k1.getX() - k.getX();
+//				int dy1 = k1.getY() - k.getY();
+//				int dx2 = k2.getX() - k1.getX();
+//				int dy2 = k2.getY() - k1.getY();
+//				double zcross = dx1*dy2 - dy1*dx2;
+//				if(zcross > 0){
+//					Waypoint n = findClosestWaypoint(k2.getX()-granularity-2, k1.getY()-granularity-2);
+//					if(n != null && n.getX() == k2.getX()-granularity && n.getY() == k1.getY()-granularity){
+//						storedPath.add(i, n);
+//						storedPath.remove(k2);
+//					}
+//				}
+//				else if(zcross < 0){
+//					Waypoint n = findClosestWaypoint(k2.getX()+granularity-2, k1.getY()-granularity-2);
+//					if(n != null && n.getX() == k2.getX()-granularity && n.getY() == k1.getY()-granularity){
+//						storedPath.add(i, n);
+//						storedPath.remove(k2);
+//					}
+//				}
+//				System.out.println(zcross);
+			}
+		}
+		int countAdd = 0;
+		boolean removedFirst = false; 
+		for(int i=0; i<toRemove.size(); i+=2){
+			if(removedFirst){
+				
+			}
+			else{
+				Waypoint n = findClosestWaypoint(toAdd.get(countAdd).x, toAdd.get(countAdd).y);
+				if(n != null && n.getX() == toAdd.get(countAdd).x && n.getY() == toAdd.get(countAdd).y){
+					int remI = toRemove.get(i);
+					storedPath.remove(remI);
+					storedPath.remove(toRemove.get(i+1));
+					storedPath.add(remI+(countAdd*2), n);
+				}
+				countAdd++; 
+			}
+		}
+
+		
+
+//		pruneStoredPath();
+	}
+	
 	public void removeNode(int x, int y){
 		Waypoint rm = findClosestWaypoint(x, y);
 		if(euclideanDistance(rm.getX(), rm.getY(), x, y) > granularity){
@@ -282,12 +372,29 @@ public class PathPlanner {
 		for(int i=x-granularity/2; i<=x+granularity/2; i++){
 			for(int j=y-granularity/2; j<=y+granularity/2; j++){
 				map[i][j] = 0b00000000;
+				
+				toReset.add(new Pixel(i, j));
+				
+			}
+		}
+		removedW.add(rm);
+		
+		// TODO: Remove
+//		System.out.println("Removed: " + rm.getX() + " " + rm.getY());
+//		countRemoved++;
+		
+		// TODO: Find a way to simplify this
+		for(Waypoint w : rm.getN()){ // waypoints){
+			if(w.getN().remove(rm)){
+				w.getRMN().add(rm);
+				if(!removedWN.contains(w)){
+					removedWN.add(w);
+//					System.out.println("Removed N: " + w.getX() + " " + w.getY());	
+//					countRemInN++;
+				}
 			}
 		}
 		waypoints.remove(rm);
-		for(Waypoint w : waypoints){
-			w.getN().remove(rm);
-		}
 	}
 
 	public void reset(){
@@ -300,6 +407,80 @@ public class PathPlanner {
 			w.from = null;
 		}
 	}
+	
+	// TODO: Make changes if sharing with Bing
+	// E.g. Call to constructor
+	public void resetFull(){
+		
+		
+//		System.out.println("CountRM: " + countRemoved);	
+//		countRemoved = 0; 
+//		System.out.println("CountRMN: " + countRemInN);	
+//		countRemInN = 0; 
+//		System.out.println(removedW.size() + " " + removedWN.size());
+		
+		for(Pixel p : toReset){
+			map[p.x][p.y] = 0b01111111; // TODO: Check this. 
+		}
+		
+		for(Waypoint w : removedW){
+			waypoints.add(w);
+//			System.out.println("Restored: " + w.getX() + " " + w.getY());	
+//			countRemoved++; 
+			
+		}
+		
+//		for(Waypoint n1 : removedW){
+//			for(Waypoint n2 : removedWN){
+//				if(n1 != n2 && Math.abs(n1.x - n2.x) <= Math.sqrt(2)*granularity && Math.abs(n1.y - n2.y) <= Math.sqrt(2*Math.pow(granularity,2))){
+//					if(isPath(n1, n2)){
+//						n1.getN().add(n2);
+//					}
+//				}
+//			}
+//		}
+		removedW.clear();
+		
+		for(Waypoint w : removedWN){
+//			System.out.println("Restoring n in " + w.getX() + " " + w.getY());
+			for(Waypoint r : w.getRMN()){
+				w.getN().add(r);
+//				System.out.println("Restored: " + r.getX() + " " + r.getY() + " in " + w.getX() + " " + w.getY());			
+//				System.out.println(countRemInN++);
+			}
+			w.getRMN().clear();
+		}
+		removedWN.clear();
+		toReset.clear();
+		reset(); 
+		
+		
+		
+////		System.out.println("CountRM: " + countRemoved);	
+////		countRemoved = 0; 
+////		System.out.println("CountRMN: " + countRemInN);	
+////		countRemInN = 0; 
+//		
+//		// TODO: REMOVE
+//		System.out.println("REMOVE THIS");
+//		int counter = 0; 
+//		for(Waypoint w : waypoints){
+//			for(Waypoint n : w.getN()){
+//				counter++;
+//			}
+//		}
+//		System.out.println("Total n: " + counter);		
+//		for(Waypoint w : waypoints){
+//			for(Waypoint n : w.getN()){
+//				if(!n.getN().contains(w)){
+//					System.out.println("Error");
+//				}
+//			}
+//		}
+//		System.out.println("HERE");
+		
+	}
+	
 	public boolean setDestination(int x, int y){ 
 		endWaypoint = findClosestWaypoint(x, y);
 		isDestinationSet = true;
@@ -338,6 +519,7 @@ public class PathPlanner {
 		while(true){
 			if(current.from == null){
 				pruneStoredPath();
+				//cornerMaker(); // JP: Bing likes to copy everything. Rename. 
 				return;
 			}
 			current = current.from;
