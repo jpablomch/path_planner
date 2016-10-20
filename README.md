@@ -1,6 +1,6 @@
 # path_planner
 
-I developed this library as an alternative for simple path planning using an map image. We are using this library in an Assistive Indoor Navigation app at the City College Robotics Lab. 
+I developed this library as an alternative for simple path planning using an occupancy map image. We are using this library in an Assistive Indoor Navigation app at the City College Robotics Lab. 
 
 # How to use it 
 
