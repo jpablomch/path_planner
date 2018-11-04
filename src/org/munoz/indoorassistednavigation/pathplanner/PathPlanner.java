@@ -1,9 +1,4 @@
-// TODO: Add Licence. MIT? 
-// 
-// DON'T MODIFY THIS CODE. THANKS. PABLO
-// BING, YOU ARE NOT AUTHORIZED TO SHARE THIS CODE.
-
-// TODO: Make changes if sharing with Bing
+// TODO: Add Licence. 
 
 package org.munoz.indoorassistednavigation.pathplanner;
 
@@ -408,12 +403,8 @@ public class PathPlanner {
 		}
 	}
 	
-	// TODO: Make changes if sharing with Bing
-	// E.g. Call to constructor
 	public void resetFull(){
 		
-		
-//		System.out.println("CountRM: " + countRemoved);	
 //		countRemoved = 0; 
 //		System.out.println("CountRMN: " + countRemInN);	
 //		countRemInN = 0; 
